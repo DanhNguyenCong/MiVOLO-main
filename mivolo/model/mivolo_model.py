@@ -137,10 +137,10 @@ class PatchEmbed(nn.Module):
         if self.with_persons_model:
 
             self.proj1 = nn.Conv2d(
-                hidden_dim, embed_dim, kernel_size=patch_size // stem_stride, stride=patch_size // stem_stride
+                hidden_dim, embed_dim, kernel_size=patch_size // stem_stride, stride=patch_size // stem_stride #28x28
             )
             self.proj2 = nn.Conv2d(
-                hidden_dim, embed_dim, kernel_size=patch_size // stem_stride, stride=patch_size // stem_stride
+                hidden_dim, embed_dim, kernel_size=patch_size // stem_stride, stride=patch_size // stem_stride # 28x28
             )
 
             stem_out_shape = get_output_size_module((img_size, img_size), self.conv1)
@@ -154,7 +154,7 @@ class PatchEmbed(nn.Module):
             )
 
         self.patch_dim = img_size // patch_size
-        self.num_patches = self.patch_dim**2
+        self.num_patches = self.patch_dim**2  # Số patches : H*W // P^2
 
     def create_stem(self, stem_stride, in_chans, hidden_dim):
         return nn.Sequential(
@@ -172,17 +172,17 @@ class PatchEmbed(nn.Module):
     def forward(self, x):
         if self.conv is not None:
             if self.with_persons_model:
-                x1 = x[:, :3]
-                x2 = x[:, 3:]
+                x1 = x[:, :3] # Phần ảnh RGB
+                x2 = x[:, 3:] # Phần thông tin bổ sung
 
-                x1 = self.conv1(x1)
-                x1 = self.proj1(x1)
+                x1 = self.conv1(x1) 
+                x1 = self.proj1(x1) # B, C, H, W
 
-                x2 = self.conv2(x2)
-                x2 = self.proj2(x2)
+                x2 = self.conv2(x2) 
+                x2 = self.proj2(x2) # B, C, H, W
 
-                x = torch.cat([x1, x2], dim=1)
-                x = self.map(x)
+                x = torch.cat([x1, x2], dim=1) # Nối hai phần lại với nhau
+                x = self.map(x) ## Qua cơ chế cross attention
             else:
                 x = self.conv(x)
                 x = self.proj(x)  # B, C, H, W
